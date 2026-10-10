@@ -1,0 +1,10 @@
+<!-- PLACEHOLDER REFERENCE ONLY: Official logo asset not yet provided -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80" width="300" height="80">
+  <rect width="300" height="80" rx="8" fill="#F8EFE3" stroke="#DDAA66" stroke-width="2"/>
+  <text x="50%" y="45%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="bold" fill="#3B1E08">
+    [CoCollaber Logo Placeholder]
+  </text>
+  <text x="50%" y="70%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#8B5A36">
+    Official asset required prior to Phase 3
+  </text>
+</svg>

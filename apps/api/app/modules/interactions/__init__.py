@@ -1,0 +1,1 @@
+"""CoCollaber Interactions Domain Module."""

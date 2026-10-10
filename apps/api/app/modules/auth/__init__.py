@@ -1,0 +1,1 @@
+"""CoCollaber Auth Domain Module."""

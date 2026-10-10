@@ -1,0 +1,1 @@
+"""CoCollaber Messaging Domain Module."""

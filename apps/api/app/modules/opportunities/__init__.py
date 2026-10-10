@@ -1,0 +1,1 @@
+"""CoCollaber Opportunities Domain Module."""

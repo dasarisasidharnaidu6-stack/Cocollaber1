@@ -1,0 +1,1 @@
+"""CoCollaber Participation Domain Module."""

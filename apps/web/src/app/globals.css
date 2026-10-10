@@ -1,0 +1,55 @@
+/* CoCollaber Brand Design Tokens - Phase 0 Foundation */
+:root {
+  /* Approved Accent Palette */
+  --color-cream: #F8EFE3;
+  --color-dark-cocoa: #3B1E08;
+  --color-medium-mocha: #8B5A36;
+  --color-warm-sand: #DDAA66;
+  --color-soft-caramel: #F1C888;
+
+  /* Semantic Application */
+  --bg-page: var(--color-cream);
+  --text-main: var(--color-dark-cocoa);
+  --text-muted: var(--color-medium-mocha);
+  --border-color: var(--color-warm-sand);
+  --surface-card: #FFFFFF;
+  --surface-highlight: var(--color-soft-caramel);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--text-main);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+a:hover,
+a:focus-visible {
+  color: var(--text-muted);
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}

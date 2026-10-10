@@ -1,0 +1,8 @@
+# Phase 5: Automated CI/CD workflows will populate this file
+name: CI Placeholder
+on: [push, pull_request]
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "CI pipeline to be fully configured in Phase 5"
