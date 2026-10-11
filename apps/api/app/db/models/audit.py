@@ -5,7 +5,7 @@ Non-repudiable system event auditing.
 import uuid
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, ForeignKey, Uuid, Index
+from sqlalchemy import String, ForeignKey, Uuid, Index, JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from apps.api.app.db.base import Base, IdMixin, TimestampMixin
 
@@ -16,7 +16,7 @@ class AuditLog(Base, IdMixin, TimestampMixin):
     action: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
     entity_type: Mapped[str] = mapped_column(String(32), nullable=False)
     entity_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
-    payload: Mapped[Dict[str, Any]] = mapped_column(JSONB, default=dict, nullable=False)
+    payload: Mapped[Dict[str, Any]] = mapped_column(JSON().with_variant(JSONB, "postgresql"), default=dict, nullable=False)
     ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
 
     __table_args__ = (

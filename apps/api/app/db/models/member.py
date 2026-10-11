@@ -24,7 +24,7 @@ class Account(Base, IdMixin, TimestampMixin, SoftDeleteMixin):
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     account_type: Mapped[str] = mapped_column(String(32), default="person", nullable=False)
     role: Mapped[str] = mapped_column(String(32), default="member", nullable=False)
-    status: Mapped[str] = mapped_column(String(32), default="unverified", nullable=False)
+    status: Mapped[str] = mapped_column(String(32), default="unverified", index=True, nullable=False)
     date_of_birth: Mapped[date] = mapped_column(Date, nullable=False)
     email_verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 

@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Text, Boolean, DateTime, ForeignKey, Table, Column, Uuid, Index
+from sqlalchemy import String, Text, Boolean, DateTime, ForeignKey, Table, Column, Uuid, Index, JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from apps.api.app.db.base import Base, IdMixin, TimestampMixin, SoftDeleteMixin
 
@@ -39,7 +39,7 @@ class Opportunity(Base, IdMixin, TimestampMixin, SoftDeleteMixin):
     is_remote: Mapped[bool] = mapped_column(Boolean, default=True, index=True, nullable=False)
     location_text: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     deadline: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    attributes: Mapped[Dict[str, Any]] = mapped_column(JSONB, default=dict, nullable=False)
+    attributes: Mapped[Dict[str, Any]] = mapped_column(JSON().with_variant(JSONB, "postgresql"), default=dict, nullable=False)
 
     creator: Mapped["Account"] = relationship("Account", back_populates="opportunities")
     domains: Mapped[List["Domain"]] = relationship("Domain", secondary=opportunity_domains)
