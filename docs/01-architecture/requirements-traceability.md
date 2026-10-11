@@ -1,0 +1,29 @@
+# CoCollaber — Requirements Traceability Matrix
+
+**Document Stage:** Phase 1 Architecture Foundation  
+**Status:** Approved Architectural Traceability  
+**Scope:** Mapping approved PRD and SRS requirements to system components, domain entities, database constraints, access controls, threat mitigations, and ADRs.
+
+---
+
+## 1. Traceability Matrix
+
+| Requirement ID & Scope | Source Doc | Architecture Component | Domain Entity / DB Constraints | Access Control Rule | Threat Mitigation | Relevant ADR | Impl Phase | Verification Evidence |
+|---|---|---|---|---|---|---|:---:|---|
+| **AUTH-001 / PRD-FR-001**<br/>Account Registration | SRS §7.1<br/>PRD §20.1 | `auth` module | `accounts`<br/>`UK(email)`, `NOT NULL(hashed_password)`, `date_of_birth` | Anonymous permitted (`ROLE_ANON`) | TM-01: Rate limiting, password hashing | ADR-003, ADR-008 | Phase 2 | `0001_initial_schema.py` table `accounts` verified |
+| **AUTH-002 / PRD-FR-001**<br/>Email Verification | SRS §7.1<br/>PRD §20.1 | `auth` module | `verification_tokens`<br/>`UK(token)`, 24h expiry | Anonymous permitted with token | TM-01: Single-use verification link | ADR-008 | Phase 2 | `0001_initial_schema.py` table `verification_tokens` verified |
+| **PROF-001 / PRD-FR-010**<br/>Multi-Identity Profile | SRS §7.2<br/>PRD §20.2 | `members` module | `profiles`<br/>`FK(account_id, CASCADE)`, `bio ≤ 500` | Owner modify only | TM-08: Sensitive auth data isolated | ADR-003 | Phase 2 | `0001_initial_schema.py` table `profiles` verified |
+| **PROF-002 / PRD-FR-011**<br/>Offers & Seeks Declarations | SRS §7.2<br/>PRD §20.2 | `members` module | `member_offers`, `member_seeks`<br/>`FK(profile_id, CASCADE)`, max 10 each | Owner modify only | Input sanitization per GV-9 | ADR-003 | Phase 2 | `0001_initial_schema.py` tables `member_offers`, `member_seeks` verified |
+| **OPP-001 / PRD-FR-020**<br/>Opportunity Creation | SRS §7.3<br/>PRD §20.3 | `opportunities` module | `opportunities`<br/>`FK(creator_id, RESTRICT)`, `title 5–120`, `desc 20–5000` | Authenticated member (`ROLE_MEMBER`) | TM-03: Prohibited content inspection | ADR-004 | Phase 2 | `0001_initial_schema.py` table `opportunities` verified |
+| **OPP-002 / PRD-FR-021**<br/>Mandatory Compensation Transparency | SRS §7.3<br/>PRD §20.3 | `opportunities` module | `opportunities`<br/>`NOT NULL(compensation_type)`, optional `details ≤ 300` | Authenticated member | TM-04: Mandatory transparency prevents labor exploitation | ADR-006 | Phase 2 | `0001_initial_schema.py` column `compensation_type` verified |
+| **OPP-003 / PRD-FR-022**<br/>Opportunity Management (Edit/Close) | SRS §7.3<br/>PRD §20.3 | `opportunities` module | `opportunities`<br/>Status lifecycle (`open`, `in_progress`, `closed`) | Creator only (`CTX_CREATOR`) | TM-02: Strict object ownership guard | ADR-004 | Phase 2 | Object authorization matrix verified |
+| **DISC-001 / PRD-FR-030**<br/>Opportunity Discovery & Filter | SRS §7.4<br/>PRD §20.4 | `discovery` module | `opportunities`, `domains`<br/>`Compound index (status, created_at)` | Public (`ROLE_ANON` & `ROLE_MEMBER`) | Parameterized queries prevent SQLi | ADR-005, ADR-007 | Phase 2 | Index `ix_opportunities_status_created_at` verified |
+| **DISC-002 / PRD-FR-031**<br/>Full-Text Keyword Search | SRS §7.4<br/>PRD §20.4 | `discovery` module | `opportunities`<br/>PostgreSQL native `tsvector` | Public (`ROLE_ANON` & `ROLE_MEMBER`) | Parameterized FTS queries | ADR-007 | Phase 2 | DiscoveryService query interface defined |
+| **INT-001 / PRD-FR-040**<br/>Express Interest | SRS §7.5<br/>PRD §20.5 | `interactions` module | `interests`<br/>`UK(opportunity_id, seeker_id)`, msg 10–1000 | Authenticated member (non-creator) | TM-05: Single interest per seeker prevents spam | ADR-004 | Phase 2 | Constraint `uq_interests_opp_seeker` verified |
+| **INT-002 / PRD-FR-041**<br/>Accept / Decline Interest | SRS §7.5<br/>PRD §20.5 | `interactions` module | `interests`<br/>Status transition (`pending` &rarr; `accepted`) | Creator only (`CTX_CREATOR`) | State validation prevents invalid transitions | ADR-004 | Phase 2 | State machine rules verified |
+| **MSG-001 / PRD-FR-043**<br/>Controlled 1-to-1 Messaging | SRS §7.6<br/>PRD §20.6 | `messaging` module | `connections`, `messages`<br/>`FK(connection_id, CASCADE)`, `is_read` | Participants only (`CTX_PARTICIPANT`) | TM-07: Mutual firewall prevents unsolicited cold messaging | ADR-008 | Phase 2 | Tables `connections`, `messages` verified |
+| **PART-001 / PRD-FR-044**<br/>Dual Start Confirmation | SRS §7.8<br/>PRD §20.5 | `participation` module | `participations`<br/>`creator_confirmed`, `seeker_confirmed` | Both participants (`CTX_PARTICIPANT`) | Verified track record requires dual handshake | ADR-004 | Phase 2 | Table `participations` verified |
+| **MOD-001 / PRD-FR-060**<br/>Reporting Mechanism | SRS §7.10<br/>PRD §20.7 | `moderation` module | `reports`<br/>`target_type`, `target_id`, `reason_code` | Authenticated member | TM-06: Human moderation queue; authenticated reporting | ADR-010 | Phase 2 | Table `reports` verified |
+| **MOD-002 / PRD-FR-061**<br/>User Blocking | SRS §7.10<br/>PRD §20.7 | `moderation` module | `blocks`<br/>`UK(blocker_id, blocked_id)` | Authenticated member | Bidirectional search and messaging invisibility | ADR-010 | Phase 2 | Table `blocks` verified |
+| **ADM-001 / PRD-FR-070**<br/>Moderation & Administration | SRS §7.11<br/>PRD §20.8 | `admin` module | `moderation_actions`<br/>`FK(moderator_id)`, `action_type`, notes | Staff only (`ROLE_MODERATOR`, `ROLE_ADMIN`) | TM-14: Mandatory justification notes | ADR-010 | Phase 2 | Table `moderation_actions` verified |
+| **ADM-005 / SRS-BR-14**<br/>System Audit Logging | SRS §7.11<br/>SRS §10.12 | `admin` module | `audit_logs`<br/>`actor_id`, `action`, `entity_type`, `payload` | System / Admin read-only | TM-14: Non-repudiable audit logging | ADR-010 | Phase 1/2 | Table `audit_logs` verified |
