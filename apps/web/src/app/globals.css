@@ -1,21 +1,49 @@
-/* CoCollaber Brand Design Tokens - Phase 0 Foundation */
-:root {
-  /* Approved Accent Palette */
-  --color-cream: #F8EFE3;
-  --color-dark-cocoa: #3B1E08;
-  --color-medium-mocha: #8B5A36;
-  --color-warm-sand: #DDAA66;
-  --color-soft-caramel: #F1C888;
+/* ==========================================================================
+   CoCollaber Design System Tokens & Global Styles
+   Strict 5-Color Brand Palette:
+     1. Cream:         #F8EFE3
+     2. Dark Cocoa:    #3B1E08
+     3. Medium Mocha:  #8B5A36
+     4. Warm Sand:     #DDAA66
+     5. Soft Caramel:  #F1C888
+   ========================================================================== */
 
-  /* Semantic Application */
-  --bg-page: var(--color-cream);
-  --text-main: var(--color-dark-cocoa);
-  --text-muted: var(--color-medium-mocha);
-  --border-color: var(--color-warm-sand);
-  --surface-card: #FFFFFF;
-  --surface-highlight: var(--color-soft-caramel);
+:root {
+  /* Approved Core Brand Palette */
+  --c-cream: #F8EFE3;
+  --c-dark-cocoa: #3B1E08;
+  --c-medium-mocha: #8B5A36;
+  --c-warm-sand: #DDAA66;
+  --c-soft-caramel: #F1C888;
+
+  /* Semantic Color Application */
+  --bg-page: var(--c-cream);
+  --bg-surface: #FFFFFF;
+  --bg-surface-subtle: #FDF9F4;
+  --bg-surface-elevated: #FAF3EA;
+  --bg-surface-warm: var(--c-soft-caramel);
+
+  --text-main: var(--c-dark-cocoa);
+  --text-muted: var(--c-medium-mocha);
+  --text-inverse: var(--c-cream);
+
+  --border-subtle: rgba(139, 90, 54, 0.18);
+  --border-default: var(--c-warm-sand);
+  --border-strong: var(--c-medium-mocha);
+
+  --focus-ring: 0 0 0 3px rgba(221, 170, 102, 0.5);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(59, 30, 8, 0.06);
+  --shadow-md: 0 4px 12px rgba(59, 30, 8, 0.08), 0 1px 3px rgba(59, 30, 8, 0.04);
+  --shadow-lg: 0 12px 28px rgba(59, 30, 8, 0.12), 0 3px 8px rgba(59, 30, 8, 0.06);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Reset & Box Sizing */
 *,
 *::before,
 *::after {
@@ -25,31 +53,88 @@
 }
 
 html {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: var(--bg-page);
   color: var(--text-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+}
+
+/* Accessible focus styling */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 a {
-  color: var(--text-main);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
-a:hover,
-a:focus-visible {
-  color: var(--text-muted);
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
 }
 
 button {
-  cursor: pointer;
   font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Utility Containers */
+.container {
+  width: 100%;
+  max-width: 1140px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.editorial-header {
+  font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+  letter-spacing: -0.02em;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom Scrollbar styled with brand tokens */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--c-cream);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--c-warm-sand);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--c-medium-mocha);
 }
