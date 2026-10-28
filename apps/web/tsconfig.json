@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -18,10 +22,23 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@cocollaber/api-client": ["../../packages/api-client/src/index.ts"]
-    }
+      "@/*": [
+        "./src/*"
+      ],
+      "@cocollaber/api-client": [
+        "../../packages/api-client/src/index.ts"
+      ]
+    },
+    "target": "ES2017"
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "../../packages/api-client/src/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "../../packages/api-client/src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

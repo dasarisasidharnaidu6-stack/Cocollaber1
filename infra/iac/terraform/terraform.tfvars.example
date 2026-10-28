@@ -1,0 +1,24 @@
+# CoCollaber Terraform Configuration Template
+# Copy to terraform.tfvars for deployment planning.
+# NEVER commit terraform.tfvars containing sensitive secrets.
+
+aws_region          = "us-east-1"
+environment         = "production"
+project_name        = "cocollaber"
+vpc_cidr            = "10.0.0.0/16"
+availability_zones  = ["us-east-1a", "us-east-1b"]
+
+# Database Configuration
+db_instance_class   = "db.t4g.small"
+db_allocated_storage = 20
+db_name             = "cocollaber_db"
+db_username         = "cocollaber_admin"
+db_password         = "REPLACE_WITH_SECURE_GENERATED_PASSWORD"
+
+# Compute Sizing
+backend_cpu         = 512
+backend_memory      = 1024
+frontend_cpu        = 256
+frontend_memory     = 512
+
+domain_name         = "app.cocollaber.com"

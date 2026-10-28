@@ -1,6 +1,6 @@
 """
 Database engine configuration and async session factory.
-Supports PostgreSQL (asyncpg) and SQLite (aiosqlite) for lightweight local tests.
+Supports SQLite (aiosqlite) for lightweight local tests and PostgreSQL (asyncpg) for production.
 """
 import os
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
@@ -8,7 +8,7 @@ from sqlalchemy.pool import NullPool, StaticPool
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+asyncpg://cocollaber_user:cocollaber_dev_password@localhost:5432/cocollaber_db"
+    "sqlite+aiosqlite:///./cocollaber.db"
 )
 
 # Connect arguments and pooling
