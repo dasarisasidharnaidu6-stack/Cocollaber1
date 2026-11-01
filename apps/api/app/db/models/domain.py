@@ -2,10 +2,11 @@
 Domain and Tag Taxonomy Models.
 Supports domain-agnostic, open-ended categorization.
 """
-from typing import List
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Boolean
+
 from apps.api.app.db.base import Base, IdMixin, TimestampMixin
+from sqlalchemy import Boolean, String
+from sqlalchemy.orm import Mapped, mapped_column
+
 
 class Domain(Base, IdMixin, TimestampMixin):
     __tablename__ = "domains"
@@ -16,6 +17,7 @@ class Domain(Base, IdMixin, TimestampMixin):
 
     def __repr__(self) -> str:
         return f"<Domain(name={self.name})>"
+
 
 class Tag(Base, IdMixin, TimestampMixin):
     __tablename__ = "tags"

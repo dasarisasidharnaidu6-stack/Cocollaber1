@@ -2,7 +2,9 @@
 Domain constants, enum values, and validation boundaries.
 Directly traceable to SRS v1.0 Global Validation Rules (GV-1..13).
 """
+
 from enum import Enum
+
 
 class OpportunityType(str, Enum):
     COLLABORATION = "collaboration"
@@ -13,12 +15,14 @@ class OpportunityType(str, Enum):
     PAID_WORK = "paid_work"
     OTHER = "other"
 
+
 class CompensationType(str, Enum):
     PAID = "paid"
     UNPAID = "unpaid"
     STIPEND = "stipend"
     CREDIT_RECOGNITION = "credit_recognition"
     UNSPECIFIED = "unspecified"
+
 
 class OpportunityStatus(str, Enum):
     DRAFT = "draft"
@@ -28,16 +32,19 @@ class OpportunityStatus(str, Enum):
     CLOSED = "closed"
     REMOVED = "removed"
 
+
 class InterestStatus(str, Enum):
     PENDING = "pending"
     ACCEPTED = "accepted"
     DECLINED = "declined"
     WITHDRAWN = "withdrawn"
 
+
 class ParticipationStatus(str, Enum):
     PROPOSED = "proposed"
     CONFIRMED = "confirmed"
     COMPLETED = "completed"
+
 
 # Validation limits per SRS Global Validation Rules
 MAX_DISPLAY_NAME_LENGTH = 60

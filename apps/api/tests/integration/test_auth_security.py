@@ -3,14 +3,14 @@ Check A — Authentication & Security Verification Tests.
 Verifies registration, login, cookie flags, session validation, expiration,
 revocation, logout invalidation, CSRF protection, CORS, and rate limiting.
 """
-import uuid
-from datetime import datetime, timezone, timedelta
-import pytest
-from sqlalchemy import select
 
-from apps.api.app.core.config import settings
-from apps.api.app.db.models import Account, SessionRecord, VerificationToken
+import uuid
+from datetime import UTC, datetime, timedelta
+
+import pytest
+from apps.api.app.db.models import Account, SessionRecord
 from apps.api.tests.integration.conftest import TestingSessionLocal
+
 
 def test_registration_and_login_flow(client):
     """Verifies that valid registration and login operate correctly."""
@@ -51,48 +51,65 @@ def test_registration_and_login_flow(client):
 
     # 4. Check CSRF Cookie issuance
     assert "cocol_csrf_token" in cookies
-    csrf_cookie_header = [h for h in login_res.headers.get_list("set-cookie") if "cocol_csrf_token" in h]
+    csrf_cookie_header = [
+        h for h in login_res.headers.get_list("set-cookie") if "cocol_csrf_token" in h
+    ]
     assert len(csrf_cookie_header) > 0
+
 
 def test_invalid_credentials_rejected(client):
     """Verifies that non-existent email and incorrect password return 401 E-AUTH."""
     # Non-existent email
-    res1 = client.post("/api/v1/auth/login", json={
-        "email": "nonexistent_user@example.com",
-        "password": "Password123!",
-    })
+    res1 = client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "nonexistent_user@example.com",
+            "password": "Password123!",
+        },
+    )
     assert res1.status_code == 401
     assert res1.json()["error_code"] == "E-AUTH"
 
     # Existent user, invalid password
     email = f"wrong_pwd_{uuid.uuid4().hex[:8]}@example.com"
-    client.post("/api/v1/auth/register", json={
-        "email": email,
-        "password": "CorrectPassword123!",
-        "date_of_birth": "1992-03-10",
-        "display_name": "Password User",
-    })
+    client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": email,
+            "password": "CorrectPassword123!",
+            "date_of_birth": "1992-03-10",
+            "display_name": "Password User",
+        },
+    )
 
-    res2 = client.post("/api/v1/auth/login", json={
-        "email": email,
-        "password": "WrongPassword456!",
-    })
+    res2 = client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": email,
+            "password": "WrongPassword456!",
+        },
+    )
     assert res2.status_code == 401
     assert res2.json()["error_code"] == "E-AUTH"
+
 
 def test_session_identifiers_unpredictable_and_server_stored(client):
     """Verifies session tokens have high cryptographic entropy and persist in sessions table."""
     email = f"session_test_{uuid.uuid4().hex[:8]}@example.com"
-    client.post("/api/v1/auth/register", json={
-        "email": email,
-        "password": "Password123!",
-        "date_of_birth": "1994-08-20",
-        "display_name": "Session Tester",
-    })
+    client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": email,
+            "password": "Password123!",
+            "date_of_birth": "1994-08-20",
+            "display_name": "Session Tester",
+        },
+    )
     login_res = client.post("/api/v1/auth/login", json={"email": email, "password": "Password123!"})
     session_token = login_res.cookies.get("cocol_session")
     assert session_token is not None
     assert len(session_token) >= 32  # Cryptographically secure 32+ bytes entropy URL-safe
+
 
 @pytest.mark.anyio
 async def test_session_expiration_rejection(client):
@@ -114,7 +131,7 @@ async def test_session_expiration_rejection(client):
         expired_session = SessionRecord(
             account_id=acc.id,
             session_token=expired_token,
-            expires_at=datetime.now(timezone.utc) - timedelta(hours=2),  # In the past
+            expires_at=datetime.now(UTC) - timedelta(hours=2),  # In the past
         )
         session.add(expired_session)
         await session.commit()
@@ -124,15 +141,19 @@ async def test_session_expiration_rejection(client):
     assert res.status_code == 401
     assert res.json()["error_code"] == "E-AUTH"
 
+
 def test_logout_invalidates_server_session_and_cookie_reuse_fails(client):
     """Verifies logout destroys the server-side session and cookie reuse is rejected."""
     email = f"logout_user_{uuid.uuid4().hex[:8]}@example.com"
-    client.post("/api/v1/auth/register", json={
-        "email": email,
-        "password": "Password123!",
-        "date_of_birth": "1991-04-12",
-        "display_name": "Logout User",
-    })
+    client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": email,
+            "password": "Password123!",
+            "date_of_birth": "1991-04-12",
+            "display_name": "Logout User",
+        },
+    )
     login_res = client.post("/api/v1/auth/login", json={"email": email, "password": "Password123!"})
     session_cookie = login_res.cookies.get("cocol_session")
     csrf_token = login_res.cookies.get("cocol_csrf_token")
@@ -155,15 +176,19 @@ def test_logout_invalidates_server_session_and_cookie_reuse_fails(client):
     assert me_res2.status_code == 401
     assert me_res2.json()["error_code"] == "E-AUTH"
 
+
 def test_csrf_protection_on_state_changing_requests(client):
     """Verifies CSRF protection blocks requests with missing or invalid tokens."""
     email = f"csrf_test_{uuid.uuid4().hex[:8]}@example.com"
-    client.post("/api/v1/auth/register", json={
-        "email": email,
-        "password": "Password123!",
-        "date_of_birth": "1993-02-14",
-        "display_name": "CSRF Tester",
-    })
+    client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": email,
+            "password": "Password123!",
+            "date_of_birth": "1993-02-14",
+            "display_name": "CSRF Tester",
+        },
+    )
     login_res = client.post("/api/v1/auth/login", json={"email": email, "password": "Password123!"})
     session_cookie = login_res.cookies.get("cocol_session")
     csrf_cookie = login_res.cookies.get("cocol_csrf_token")
@@ -207,6 +232,7 @@ def test_csrf_protection_on_state_changing_requests(client):
     assert res_bearer.status_code == 200
     assert res_bearer.json()["headline"] == "Bearer Updated"
 
+
 def test_cors_rejects_arbitrary_origins_with_credentials(client):
     """Verifies that untrusted origins are NOT granted credentialed CORS permissions."""
     untrusted_origin = "http://malicious-site.attacker.com"
@@ -221,13 +247,16 @@ def test_cors_rejects_arbitrary_origins_with_credentials(client):
     allow_origin = res.headers.get("access-control-allow-origin")
     assert allow_origin != untrusted_origin
 
+
 def test_login_throttling_rate_limiting(client):
     """Verifies in-memory rate limiting triggers 429 E-RATE when login threshold is exceeded."""
     target_email = "rate_limit_target@example.com"
     # Rapidly fire login attempts beyond the 10-attempt threshold
     exceeded = False
     for i in range(12):
-        res = client.post("/api/v1/auth/login", json={"email": target_email, "password": "WrongPassword!"})
+        res = client.post(
+            "/api/v1/auth/login", json={"email": target_email, "password": "WrongPassword!"}
+        )
         if res.status_code == 429:
             exceeded = True
             assert res.json()["error_code"] == "E-RATE"

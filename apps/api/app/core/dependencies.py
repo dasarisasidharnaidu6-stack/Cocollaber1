@@ -2,34 +2,38 @@
 FastAPI dependency injection providers: DB session, authenticated member,
 permission checker, and resource authorization assertions.
 """
-import uuid
-from datetime import datetime, timezone
-from typing import AsyncGenerator, Optional, Any
-from fastapi import Depends, Header, Cookie, Request
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
-from apps.api.app.db.session import get_db_session
-from apps.api.app.core.security import decode_access_token
+import uuid
+from collections.abc import AsyncGenerator
+from datetime import UTC, datetime
+from typing import Any
+
 from apps.api.app.core.exceptions import AuthenticationError, ForbiddenError
+from apps.api.app.core.security import decode_access_token
 from apps.api.app.db.models import Account, SessionRecord
+from apps.api.app.db.session import get_db_session
+from fastapi import Cookie, Depends, Header, Request
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency yielding an async database session."""
     async for session in get_db_session():
         yield session
 
+
 async def get_current_account(
     request: Request,
-    authorization: Optional[str] = Header(None),
-    cocol_session: Optional[str] = Cookie(None),
+    authorization: str | None = Header(None),
+    cocol_session: str | None = Cookie(None),
     db: AsyncSession = Depends(get_db),
 ) -> Account:
     """
     Extracts and authenticates user from Bearer JWT in Authorization header or
     server-side session token in cocol_session cookie.
     """
-    account_id: Optional[uuid.UUID] = None
+    account_id: uuid.UUID | None = None
 
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ", 1)[1].strip()
@@ -44,7 +48,7 @@ async def get_current_account(
     elif cocol_session:
         stmt = select(SessionRecord).where(
             SessionRecord.session_token == cocol_session,
-            SessionRecord.expires_at > datetime.now(timezone.utc),
+            SessionRecord.expires_at > datetime.now(UTC),
         )
         res = await db.execute(stmt)
         session_rec = res.scalar_one_or_none()
@@ -64,6 +68,7 @@ async def get_current_account(
 
     return account
 
+
 async def get_current_active_member(
     account: Account = Depends(get_current_account),
 ) -> Account:
@@ -72,18 +77,23 @@ async def get_current_active_member(
         raise ForbiddenError("Account is suspended or inactive.")
     return account
 
+
 def require_roles(*allowed_roles: str):
     """Dependency enforcing role-based access control (RBAC)."""
+
     async def role_checker(account: Account = Depends(get_current_active_member)) -> Account:
         if account.role not in allowed_roles:
             raise ForbiddenError("Insufficient role permissions.")
         return account
+
     return role_checker
+
 
 def assert_opportunity_creator(account_id: uuid.UUID, opp: Any) -> None:
     """Enforces that the current account is the creator of the given opportunity."""
     if opp.creator_id != account_id:
         raise ForbiddenError("You are not the creator of this opportunity.")
+
 
 def assert_connection_participant(account_id: uuid.UUID, conn: Any) -> None:
     """Enforces that the current account is a verified participant of the connection."""

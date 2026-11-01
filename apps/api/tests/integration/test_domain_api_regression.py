@@ -3,16 +3,21 @@ Integration and Regression Tests for CoCollaber Domain APIs.
 Covers Opportunity CRUD & Compensation Transparency, Member Profiles (Offers/Seeks),
 Discovery & Search Filters, and Moderation Actions.
 """
-import uuid
-from datetime import datetime, timezone
-import pytest
-from sqlalchemy import select
 
-from apps.api.app.db.models import (
-    Account, Profile, Opportunity, Domain, Tag, Report, Block, MemberOffer, MemberSeek
-)
+import uuid
+from datetime import datetime
+
+import pytest
 from apps.api.app.core.security import create_access_token
+from apps.api.app.db.models import (
+    Account,
+    Domain,
+    Opportunity,
+    Profile,
+    Tag,
+)
 from apps.api.tests.integration.conftest import TestingSessionLocal
+from sqlalchemy import select
 
 
 @pytest.fixture
@@ -144,7 +149,9 @@ async def test_opportunity_validation_and_lifecycle(client, regression_test_data
 
     # 5. Update opportunity
     update_payload = {"title": "Build Distributed Consensus Engine (Updated)"}
-    update_res = client.put(f"/api/v1/opportunities/{opp_id}", json=update_payload, headers=auth_headers)
+    update_res = client.put(
+        f"/api/v1/opportunities/{opp_id}", json=update_payload, headers=auth_headers
+    )
     assert update_res.status_code == 200
     assert update_res.json()["title"] == "Build Distributed Consensus Engine (Updated)"
 
@@ -281,7 +288,9 @@ async def test_moderation_reporting_and_staff_actions(client, regression_test_da
         "action_type": "remove_content",
         "notes": "Verified spam; content removed per community guidelines.",
     }
-    action_res = client.post(f"/api/v1/moderation/reports/{report_id}/act", json=action_payload, headers=staff_headers)
+    action_res = client.post(
+        f"/api/v1/moderation/reports/{report_id}/act", json=action_payload, headers=staff_headers
+    )
     assert action_res.status_code == 200
     assert "recorded successfully" in action_res.json()["message"]
 
@@ -293,6 +302,8 @@ async def test_moderation_reporting_and_staff_actions(client, regression_test_da
         assert opp.status == "removed"
 
     # 7. Self-blocking prohibition
-    block_self = client.post(f"/api/v1/moderation/blocks/{data['member_id']}", headers=member_headers)
+    block_self = client.post(
+        f"/api/v1/moderation/blocks/{data['member_id']}", headers=member_headers
+    )
     assert block_self.status_code == 400
     assert block_self.json()["error_code"] == "E-VAL"

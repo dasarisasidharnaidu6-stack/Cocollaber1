@@ -1,31 +1,43 @@
 """Interactions Module Router."""
+
 import uuid
-from datetime import datetime, timezone
-from typing import List
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from datetime import UTC, datetime
 
 from apps.api.app.core.dependencies import (
-    get_db, get_current_active_member, assert_opportunity_creator
+    assert_opportunity_creator,
+    get_current_active_member,
+    get_db,
 )
 from apps.api.app.core.exceptions import (
-    NotFoundError, ValidationError, ForbiddenError, ConflictError
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+    ValidationError,
 )
-from apps.api.app.db.models import Opportunity, Interest, Connection, Account
+from apps.api.app.db.models import Account, Connection, Interest, Opportunity
 from apps.api.app.modules.interactions.schemas import (
-    InterestCreate, InterestResponse, InterestRespondRequest
+    InterestCreate,
+    InterestRespondRequest,
+    InterestResponse,
 )
 from apps.api.app.schemas.common import MessageResponse
+from fastapi import APIRouter, Depends, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(tags=["Interactions & Connections"])
 
-@router.post("/opportunities/{id}/interests", response_model=InterestResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/opportunities/{id}/interests",
+    response_model=InterestResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def express_interest(
     id: uuid.UUID,
     payload: InterestCreate,
     account: Account = Depends(get_current_active_member),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     stmt = select(Opportunity).where(Opportunity.id == id, Opportunity.deleted_at.is_(None))
     res = await db.execute(stmt)
@@ -38,29 +50,26 @@ async def express_interest(
 
     # Check duplicate
     stmt_dup = select(Interest).where(
-        Interest.opportunity_id == id,
-        Interest.seeker_id == account.id
+        Interest.opportunity_id == id, Interest.seeker_id == account.id
     )
     res_dup = await db.execute(stmt_dup)
     if res_dup.scalar_one_or_none():
         raise ConflictError("You have already expressed interest in this opportunity.")
 
     interest = Interest(
-        opportunity_id=id,
-        seeker_id=account.id,
-        message=payload.message,
-        status="pending"
+        opportunity_id=id, seeker_id=account.id, message=payload.message, status="pending"
     )
     db.add(interest)
     await db.commit()
     await db.refresh(interest)
     return interest
 
-@router.get("/opportunities/{id}/interests", response_model=List[InterestResponse])
+
+@router.get("/opportunities/{id}/interests", response_model=list[InterestResponse])
 async def list_opportunity_interests(
     id: uuid.UUID,
     account: Account = Depends(get_current_active_member),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     stmt = select(Opportunity).where(Opportunity.id == id, Opportunity.deleted_at.is_(None))
     res = await db.execute(stmt)
@@ -70,16 +79,19 @@ async def list_opportunity_interests(
 
     assert_opportunity_creator(account.id, opp)
 
-    stmt_int = select(Interest).where(Interest.opportunity_id == id).order_by(Interest.created_at.desc())
+    stmt_int = (
+        select(Interest).where(Interest.opportunity_id == id).order_by(Interest.created_at.desc())
+    )
     res_int = await db.execute(stmt_int)
     return res_int.scalars().all()
+
 
 @router.post("/interests/{id}/respond", response_model=InterestResponse)
 async def respond_to_interest(
     id: uuid.UUID,
     payload: InterestRespondRequest,
     account: Account = Depends(get_current_active_member),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     if payload.action not in ("accept", "decline"):
         raise ValidationError("Action must be 'accept' or 'decline'.")
@@ -99,7 +111,7 @@ async def respond_to_interest(
         raise ValidationError(f"Interest is already in '{interest.status}' status.")
 
     interest.status = "accepted" if payload.action == "accept" else "declined"
-    interest.responded_at = datetime.now(timezone.utc)
+    interest.responded_at = datetime.now(UTC)
 
     # Unlock connection & messaging if accepted
     if payload.action == "accept":
@@ -108,7 +120,7 @@ async def respond_to_interest(
             opportunity_id=opp.id,
             creator_id=opp.creator_id,
             seeker_id=interest.seeker_id,
-            status="active"
+            status="active",
         )
         db.add(connection)
 
@@ -116,11 +128,12 @@ async def respond_to_interest(
     await db.refresh(interest)
     return interest
 
+
 @router.post("/interests/{id}/withdraw", response_model=MessageResponse)
 async def withdraw_interest(
     id: uuid.UUID,
     account: Account = Depends(get_current_active_member),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     stmt = select(Interest).where(Interest.id == id, Interest.seeker_id == account.id)
     res = await db.execute(stmt)

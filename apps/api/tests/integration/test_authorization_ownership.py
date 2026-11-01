@@ -3,15 +3,24 @@ Check B — Authorization and Ownership Verification Tests.
 Verifies multi-user role boundaries, object-level authorization (ABAC),
 ownership invariants, IDOR prevention, impersonation blocking, and public read.
 """
-import uuid
-from datetime import datetime, timezone
-import pytest
-from sqlalchemy import select
 
+import uuid
+from datetime import datetime
+
+import pytest
 from apps.api.app.db.models import (
-    Account, Profile, Opportunity, Connection, Interest, Message, MemberOffer, MemberSeek
+    Account,
+    Connection,
+    Interest,
+    MemberOffer,
+    MemberSeek,
+    Message,
+    Opportunity,
+    Profile,
 )
 from apps.api.tests.integration.conftest import TestingSessionLocal
+from sqlalchemy import select
+
 
 @pytest.fixture
 async def setup_users_and_resources():
@@ -127,6 +136,7 @@ async def setup_users_and_resources():
 
         # Issue JWT tokens for A and B
         from apps.api.app.core.security import create_access_token
+
         token_a = create_access_token({"sub": str(user_a.id), "role": user_a.role})
         token_b = create_access_token({"sub": str(user_b.id), "role": user_b.role})
 
@@ -142,6 +152,7 @@ async def setup_users_and_resources():
             "seek_a_id": seek_a.id,
             "interest_c_id": interest_c.id,
         }
+
 
 @pytest.mark.anyio
 async def test_user_b_cannot_read_user_a_private_data(client, setup_users_and_resources):
@@ -170,6 +181,7 @@ async def test_user_b_cannot_read_user_a_private_data(client, setup_users_and_re
     assert msg_res.status_code == 403
     assert msg_res.json()["error_code"] == "E-FORB"
 
+
 @pytest.mark.anyio
 async def test_user_b_cannot_update_user_a_opportunity(client, setup_users_and_resources):
     """Verifies User B cannot update User A's opportunity and DB state remains unchanged."""
@@ -193,6 +205,7 @@ async def test_user_b_cannot_update_user_a_opportunity(client, setup_users_and_r
         assert opp.title == "Original Title by Alice"
         assert opp.creator_id == data["user_a_id"]
 
+
 @pytest.mark.anyio
 async def test_user_b_cannot_delete_user_a_opportunity(client, setup_users_and_resources):
     """Verifies User B cannot delete User A's opportunity and DB state remains open."""
@@ -214,8 +227,11 @@ async def test_user_b_cannot_delete_user_a_opportunity(client, setup_users_and_r
         assert opp.deleted_at is None
         assert opp.status == "open"
 
+
 @pytest.mark.anyio
-async def test_user_b_cannot_change_opportunity_owner_or_impersonate(client, setup_users_and_resources):
+async def test_user_b_cannot_change_opportunity_owner_or_impersonate(
+    client, setup_users_and_resources
+):
     """Verifies creator_id cannot be overwritten or impersonated via request payload."""
     data = setup_users_and_resources
     token_b = data["token_b"]
@@ -241,14 +257,19 @@ async def test_user_b_cannot_change_opportunity_owner_or_impersonate(client, set
         assert opp.creator_id == data["user_b_id"]
         assert opp.creator_id != data["user_a_id"]
 
+
 @pytest.mark.anyio
-async def test_user_b_cannot_access_user_a_connections_or_cross_resources(client, setup_users_and_resources):
+async def test_user_b_cannot_access_user_a_connections_or_cross_resources(
+    client, setup_users_and_resources
+):
     """Verifies User B cannot list User A's private connections or mutate User A's profile items."""
     data = setup_users_and_resources
     token_b = data["token_b"]
 
     # 1. List connections as User B -> User A's connection is NOT returned
-    list_conn_res = client.get("/api/v1/connections", headers={"Authorization": f"Bearer {token_b}"})
+    list_conn_res = client.get(
+        "/api/v1/connections", headers={"Authorization": f"Bearer {token_b}"}
+    )
     assert list_conn_res.status_code == 200
     conn_ids = [c["id"] for c in list_conn_res.json()]
     assert str(data["conn_a_id"]) not in conn_ids
@@ -281,6 +302,7 @@ async def test_user_b_cannot_access_user_a_connections_or_cross_resources(client
         headers={"Authorization": f"Bearer {token_b}"},
     )
     assert respond_res.status_code == 403
+
 
 @pytest.mark.anyio
 async def test_legitimate_owner_and_public_read_operations(client, setup_users_and_resources):

@@ -5,17 +5,16 @@ Revises: 0001_initial_schema
 Create Date: 2026-10-14 22:30:00.000000
 
 """
-from typing import Sequence, Union
+
+from collections.abc import Sequence
 
 from alembic import op
-import sqlalchemy as sa
-
 
 # revision identifiers, used by Alembic.
 revision: str = "0002_phase2_schema_alignment"
-down_revision: Union[str, None] = "0001_initial_schema"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "0001_initial_schema"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -31,7 +30,9 @@ def upgrade() -> None:
     op.create_index(op.f("ix_interests_status"), "interests", ["status"], unique=False)
     op.create_index(op.f("ix_messages_connection_id"), "messages", ["connection_id"], unique=False)
     op.create_index(op.f("ix_notifications_is_read"), "notifications", ["is_read"], unique=False)
-    op.create_index(op.f("ix_notifications_recipient_id"), "notifications", ["recipient_id"], unique=False)
+    op.create_index(
+        op.f("ix_notifications_recipient_id"), "notifications", ["recipient_id"], unique=False
+    )
     op.drop_index(op.f("ix_profiles_account_id"), table_name="profiles")
     op.create_index(op.f("ix_profiles_account_id"), "profiles", ["account_id"], unique=True)
     op.drop_index(op.f("ix_reports_target_type_target_id"), table_name="reports")
@@ -42,9 +43,21 @@ def upgrade() -> None:
     op.drop_index(op.f("ix_tags_name"), table_name="tags")
     op.create_index(op.f("ix_tags_name"), "tags", ["name"], unique=True)
     op.drop_index(op.f("ix_verification_tokens_token"), table_name="verification_tokens")
-    op.create_index(op.f("ix_verification_tokens_token"), "verification_tokens", ["token"], unique=True)
-    op.create_index(op.f("ix_verification_tokens_account_id"), "verification_tokens", ["account_id"], unique=False)
-    op.create_index(op.f("ix_verification_tokens_token_type"), "verification_tokens", ["token_type"], unique=False)
+    op.create_index(
+        op.f("ix_verification_tokens_token"), "verification_tokens", ["token"], unique=True
+    )
+    op.create_index(
+        op.f("ix_verification_tokens_account_id"),
+        "verification_tokens",
+        ["account_id"],
+        unique=False,
+    )
+    op.create_index(
+        op.f("ix_verification_tokens_token_type"),
+        "verification_tokens",
+        ["token_type"],
+        unique=False,
+    )
     # ### end Alembic commands ###
 
 
@@ -53,14 +66,21 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_verification_tokens_token_type"), table_name="verification_tokens")
     op.drop_index(op.f("ix_verification_tokens_account_id"), table_name="verification_tokens")
     op.drop_index(op.f("ix_verification_tokens_token"), table_name="verification_tokens")
-    op.create_index(op.f("ix_verification_tokens_token"), "verification_tokens", ["token"], unique=False)
+    op.create_index(
+        op.f("ix_verification_tokens_token"), "verification_tokens", ["token"], unique=False
+    )
     op.drop_index(op.f("ix_tags_name"), table_name="tags")
     op.create_index(op.f("ix_tags_name"), "tags", ["name"], unique=False)
     op.drop_index(op.f("ix_sessions_session_token"), table_name="sessions")
     op.drop_index(op.f("ix_sessions_expires_at"), table_name="sessions")
     op.drop_index(op.f("ix_reports_target_type"), table_name="reports")
     op.drop_index(op.f("ix_reports_target_id"), table_name="reports")
-    op.create_index(op.f("ix_reports_target_type_target_id"), "reports", ["target_type", "target_id"], unique=False)
+    op.create_index(
+        op.f("ix_reports_target_type_target_id"),
+        "reports",
+        ["target_type", "target_id"],
+        unique=False,
+    )
     op.drop_index(op.f("ix_profiles_account_id"), table_name="profiles")
     op.create_index(op.f("ix_profiles_account_id"), "profiles", ["account_id"], unique=False)
     op.drop_index(op.f("ix_notifications_recipient_id"), table_name="notifications")

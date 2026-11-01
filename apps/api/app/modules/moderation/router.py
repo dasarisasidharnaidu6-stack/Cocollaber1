@@ -1,30 +1,35 @@
 """Moderation Module Router."""
-import uuid
-from typing import List
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
-from apps.api.app.core.dependencies import (
-    get_db, get_current_active_member, require_roles
-)
-from apps.api.app.core.exceptions import NotFoundError, ValidationError, ConflictError
-from apps.api.app.db.models import Report, Block, ModerationAction, Account, Opportunity
+import uuid
+
+from apps.api.app.core.dependencies import get_current_active_member, get_db, require_roles
+from apps.api.app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from apps.api.app.db.models import Account, Block, ModerationAction, Opportunity, Report
 from apps.api.app.modules.moderation.schemas import (
-    ReportCreate, ReportResponse, ModerationActionCreate
+    ModerationActionCreate,
+    ReportCreate,
+    ReportResponse,
 )
 from apps.api.app.schemas.common import MessageResponse
+from fastapi import APIRouter, Depends, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/moderation", tags=["Trust, Safety & Moderation"])
+
+require_staff = require_roles("moderator", "admin")
+
 
 @router.post("/reports", response_model=ReportResponse, status_code=status.HTTP_201_CREATED)
 async def submit_report(
     payload: ReportCreate,
     account: Account = Depends(get_current_active_member),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     if payload.target_type not in ("opportunity", "profile", "message"):
-        raise ValidationError("Invalid target_type. Must be 'opportunity', 'profile', or 'message'.")
+        raise ValidationError(
+            "Invalid target_type. Must be 'opportunity', 'profile', or 'message'."
+        )
 
     report = Report(
         reporter_id=account.id,
@@ -32,26 +37,26 @@ async def submit_report(
         target_id=payload.target_id,
         reason_code=payload.reason_code,
         details=payload.details,
-        status="pending"
+        status="pending",
     )
     db.add(report)
     await db.commit()
     await db.refresh(report)
     return report
 
-@router.post("/blocks/{account_id}", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/blocks/{account_id}", response_model=MessageResponse, status_code=status.HTTP_201_CREATED
+)
 async def block_member(
     account_id: uuid.UUID,
     account: Account = Depends(get_current_active_member),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     if account.id == account_id:
         raise ValidationError("You cannot block yourself.")
 
-    stmt = select(Block).where(
-        Block.blocker_id == account.id,
-        Block.blocked_id == account_id
-    )
+    stmt = select(Block).where(Block.blocker_id == account.id, Block.blocked_id == account_id)
     if (await db.execute(stmt)).scalar_one_or_none():
         raise ConflictError("Member is already blocked.")
 
@@ -60,16 +65,14 @@ async def block_member(
     await db.commit()
     return MessageResponse(message="Member blocked successfully.")
 
+
 @router.delete("/blocks/{account_id}", response_model=MessageResponse)
 async def unblock_member(
     account_id: uuid.UUID,
     account: Account = Depends(get_current_active_member),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
-    stmt = select(Block).where(
-        Block.blocker_id == account.id,
-        Block.blocked_id == account_id
-    )
+    stmt = select(Block).where(Block.blocker_id == account.id, Block.blocked_id == account_id)
     block = (await db.execute(stmt)).scalar_one_or_none()
     if not block:
         raise NotFoundError("Block relationship not found.")
@@ -78,21 +81,20 @@ async def unblock_member(
     await db.commit()
     return MessageResponse(message="Member unblocked successfully.")
 
-@router.get("/reports", response_model=List[ReportResponse])
-async def list_reports(
-    staff: Account = Depends(require_roles("moderator", "admin")),
-    db: AsyncSession = Depends(get_db)
-):
+
+@router.get("/reports", response_model=list[ReportResponse])
+async def list_reports(staff: Account = Depends(require_staff), db: AsyncSession = Depends(get_db)):
     stmt = select(Report).where(Report.status == "pending").order_by(Report.created_at.desc())
     res = await db.execute(stmt)
     return res.scalars().all()
+
 
 @router.post("/reports/{id}/act", response_model=MessageResponse)
 async def act_on_report(
     id: uuid.UUID,
     payload: ModerationActionCreate,
-    staff: Account = Depends(require_roles("moderator", "admin")),
-    db: AsyncSession = Depends(get_db)
+    staff: Account = Depends(require_staff),
+    db: AsyncSession = Depends(get_db),
 ):
     stmt = select(Report).where(Report.id == id)
     report = (await db.execute(stmt)).scalar_one_or_none()
@@ -103,7 +105,7 @@ async def act_on_report(
         report_id=report.id,
         moderator_id=staff.id,
         action_type=payload.action_type,
-        notes=payload.notes
+        notes=payload.notes,
     )
     db.add(action)
 
@@ -122,4 +124,6 @@ async def act_on_report(
             target_acc.status = "suspended"
 
     await db.commit()
-    return MessageResponse(message=f"Moderation action '{payload.action_type}' recorded successfully.")
+    return MessageResponse(
+        message=f"Moderation action '{payload.action_type}' recorded successfully."
+    )

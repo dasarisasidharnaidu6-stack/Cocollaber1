@@ -3,8 +3,10 @@ In-Memory Rate Limiting Middleware.
 Provides rolling-window request throttling for sensitive endpoints (e.g. login, search)
 returning SRS-compliant 429 E-RATE responses.
 """
+
 import time
 from collections import defaultdict
+
 from fastapi import Request
 from starlette.responses import JSONResponse
 
@@ -16,6 +18,7 @@ RATE_LIMIT_RULES = [
     ("/api/v1/auth/login", 10, 60),
     ("/api/v1/auth/register", 15, 60),
 ]
+
 
 async def rate_limit_middleware(request: Request, call_next):
     path = request.url.path

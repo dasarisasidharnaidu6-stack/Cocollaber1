@@ -2,16 +2,17 @@
 Shared Integration Test Fixtures for Phase 2 Verification Gate.
 Sets up an isolated database and configured TestClient.
 """
-import os
-import asyncio
-import pytest
-from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from fastapi.testclient import TestClient
 
-from apps.api.app.main import app
-from apps.api.app.db.base import Base
+import asyncio
+import os
+from collections.abc import AsyncGenerator
+
+import pytest
 from apps.api.app.core.dependencies import get_db
+from apps.api.app.db.base import Base
+from apps.api.app.main import app
+from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 TEST_DB_PATH = os.path.abspath("./test_integration_gate.db")
 TEST_DB_URL = f"sqlite+aiosqlite:///{TEST_DB_PATH}"
@@ -27,13 +28,16 @@ TestingSessionLocal = async_sessionmaker(
     expire_on_commit=False,
 )
 
+
 @pytest.fixture
 def anyio_backend():
     return "asyncio"
 
+
 @pytest.fixture(scope="session", autouse=True)
 def initialize_database():
     """Initializes the isolated test database schema before all integration tests."""
+
     async def init_models():
         async with test_engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
@@ -41,6 +45,7 @@ def initialize_database():
 
     asyncio.run(init_models())
     yield
+
     async def cleanup_models():
         async with test_engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
@@ -53,15 +58,18 @@ def initialize_database():
         except OSError:
             pass
 
+
 @pytest.fixture
 async def db_session() -> AsyncGenerator[AsyncSession, None]:
     """Yields an isolated async session for database verifications."""
     async with TestingSessionLocal() as session:
         yield session
 
+
 @pytest.fixture
 def client():
     """Provides a TestClient with overridden get_db dependency."""
+
     async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
         async with TestingSessionLocal() as session:
             yield session
