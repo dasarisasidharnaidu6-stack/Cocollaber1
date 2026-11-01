@@ -39,6 +39,8 @@ jobs:
       - name: Run Pytest Regression Suite
         run: |
           python -m pytest apps/api/tests -v --durations=10
+        env:
+          PYTHONPATH: .
 
   frontend-quality:
     name: Frontend Typecheck, Lint & Build (Node 20)
@@ -58,13 +60,17 @@ jobs:
         working-directory: apps/web
         run: npm ci
 
-      - name: Lint Next.js codebase
+      - name: Generate Next.js TypeScript declarations
         working-directory: apps/web
-        run: npm run lint
+        run: npm run typegen
 
       - name: Verify TypeScript types
         working-directory: apps/web
         run: npm run typecheck
+
+      - name: Lint Next.js codebase
+        working-directory: apps/web
+        run: npm run lint
 
       - name: Build production bundle
         working-directory: apps/web

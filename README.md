@@ -8,9 +8,10 @@
   <strong>"What opportunity are you looking for, and what opportunity can you offer?"</strong>
 </p>
 
-[![Phase](https://img.shields.io/badge/Phase_0-Foundation_Verified-8B5A36?style=for-the-badge&logo=target)](file:///docs/PROGRESS.md)
+[![Phase](https://img.shields.io/badge/Phases_0--6-Complete_Verified-8B5A36?style=for-the-badge&logo=target)](file:///docs/PROGRESS.md)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-3B1E08?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
-[![Next.js](https://img.shields.io/badge/Next.js-14_App_Router-DDAA66?style=for-the-badge&logo=next.js&logoColor=black)](https://nextjs.org)
+[![Next.js](https://img.shields.io/badge/Next.js-15_App_Router-DDAA66?style=for-the-badge&logo=next.js&logoColor=black)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19.3-F1C888?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict_5.6-F1C888?style=for-the-badge&logo=typescript&logoColor=black)](https://www.typescriptlang.org)
 [![Python](https://img.shields.io/badge/Python-3.12-F8EFE3?style=for-the-badge&logo=python&logoColor=3B1E08)](https://python.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-3B1E08?style=for-the-badge&logo=postgresql)](https://www.postgresql.org)
@@ -98,7 +99,7 @@ Built with a clean separation of concerns, strict type contracts, and asynchrono
 ```mermaid
 graph TD
     subgraph Frontend["Frontend Tier (apps/web)"]
-        NextApp["Next.js 14 App Router"]
+        NextApp["Next.js 15 App Router"]
         DS["Design System & Tokens"]
         Hooks["Domain Hooks (useAuth, useOpportunities)"]
     end
@@ -149,7 +150,11 @@ cocollaber/
 │   ├── 03-design-system/                  # Tokens & UI components (Phase 3)
 │   ├── 04-integration/                    # E2E workflows & hardening (Phase 4)
 │   ├── 05-quality/                        # Test plans & quality gates (Phase 5)
-│   └── 06-cloud/                          # Deployment topologies (Phase 6)
+│   ├── 06-cloud-architecture/             # Cloud topology, cost modeling & DR (Phase 6)
+│   └── 06-cloud/                          # Architecture bridge index
+│
+├── infra/                                 # Infrastructure as Code
+│   └── iac/terraform/                     # Production Terraform blueprint (Phase 6)
 │
 ├── apps/
 │   ├── api/                               # FastAPI Backend (Python 3.12)
@@ -163,7 +168,7 @@ cocollaber/
 │   │   ├── tests/                         # Pytest unit & integration suites
 │   │   └── pyproject.toml                 # Backend dependencies
 │   │
-│   └── web/                               # Next.js 14 Frontend (App Router)
+│   └── web/                               # Next.js 15 Frontend (App Router & React 19)
 │       ├── src/
 │       │   ├── app/                       # (marketing), (auth), (dashboard), (admin)
 │       │   ├── components/                # common, ui, opportunities, members, messaging
@@ -203,13 +208,27 @@ python -m uvicorn apps.api.app.main:app --host 0.0.0.0 --port 8000 --reload
 
 #### Run Backend Verification Tests
 ```powershell
-python -m pytest apps/api/tests/unit -v
+python -m pytest apps/api/tests -v
 ```
 
 #### Frontend Service
 ```powershell
 cd apps/web
-npm install
+# Install exact dependencies
+npm ci
+
+# Typecheck and lint
+npm run typegen
+npm run typecheck
+npm run lint
+
+# Production build & start
+npm run build
+npm start
+
+# Run Playwright E2E User Journeys (14 tests)
+npm run test:e2e
+# Dev server
 npm run dev
 ```
 * **Web Application:** `http://localhost:3000`
@@ -221,12 +240,13 @@ npm run dev
 | Phase | Milestone | Scope | Status |
 |:---:|:---|:---|:---:|
 | **Phase 0** | **Repository Foundation** | File tree, documentation, health endpoint, progress tracking | ✅ **COMPLETE** |
-| **Phase 1** | **Architecture & DB Schema** | PostgreSQL schema, SQLAlchemy 2.0 async models, Alembic | 🟡 **READY** |
-| **Phase 2** | **Backend APIs & Auth** | Registration, verify, opportunities CRUD, search, messaging | ⚪ *QUEUED* |
-| **Phase 3** | **Frontend & Design System** | Next.js screens, brand tokens, responsive UI components | ⚪ *QUEUED* |
-| **Phase 4** | **Integration & Hardening** | Full user loop, micro-animations, edge case resilience | ⚪ *QUEUED* |
-| **Phase 5** | **Quality & CI/CD** | Automated test suites, GitHub Actions, security audits | ⚪ *QUEUED* |
-| **Phase 6** | **Cloud & Cost Architecture** | Container staging/production, budget caps, observability | ⚪ *QUEUED* |
+| **Phase 1** | **Architecture & DB Schema** | PostgreSQL schema, SQLAlchemy 2.0 async models, Alembic | ✅ **COMPLETE** |
+| **Phase 2** | **Backend APIs & Auth** | Registration, verify, opportunities CRUD, search, messaging | ✅ **COMPLETE** |
+| **Phase 3** | **Frontend & Design System** | Next.js screens, brand tokens, responsive UI components | ✅ **COMPLETE** |
+| **Phase 4** | **Integration & Hardening** | Full user loop, micro-animations, edge case resilience | ✅ **COMPLETE** |
+| **Phase 5** | **Quality & CI/CD** | Automated test suites, GitHub Actions, security audits | ✅ **COMPLETE** |
+| **Phase 6** | **Cloud & Cost Architecture** | Multi-tier cost modeling, DR runbooks, Terraform blueprint | ✅ **COMPLETE** |
+| **Phase 7** | **Product Features & CI/CD** | CI remediation, live messaging, multi-identity profiles | 🟡 **IN PROGRESS** |
 
 ---
 
