@@ -31,7 +31,7 @@ export default function OpportunityDetailPage() {
         setOpportunity(data);
       } catch (err: any) {
         // Fallback to sample matching if offline
-        const found = SAMPLE_OPPORTUNITIES.find((o) => o.id === id);
+        const found = SAMPLE_OPPORTUNITIES.find((o: Opportunity) => o.id === id);
         if (found) {
           setOpportunity(found);
         } else {

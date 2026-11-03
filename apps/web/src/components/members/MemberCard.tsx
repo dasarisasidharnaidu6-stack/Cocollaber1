@@ -1,5 +1,5 @@
 import React from 'react';
-import { Profile } from '@/lib/api/client';
+import { Offer, Profile } from '@/lib/api/client';
 import { Card } from '@/components/ui/Card';
 
 export interface MemberCardProps {
@@ -72,7 +72,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({ profile }) => {
             Offers:
           </span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.25rem' }}>
-            {profile.offers.slice(0, 3).map((off) => (
+            {profile.offers.slice(0, 3).map((off: Offer) => (
               <span
                 key={off.id}
                 style={{
